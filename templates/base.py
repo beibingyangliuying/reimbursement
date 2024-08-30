@@ -1,5 +1,4 @@
 from enum import Enum, auto
-from types import MappingProxyType
 
 import pandas as pd
 from cytoolz.curried import curry, memoize  # type:ignore
@@ -8,15 +7,8 @@ from docx.oxml.ns import qn
 from docx.shared import Pt, RGBColor
 from pymonad.reader import Pipe  # type:ignore
 
-Date = str
-Name = str
-Category = str
-HasInvoice = str
-Description = str
-Amount = float
 
-
-class ColumnType(Enum):
+class Column(Enum):
     DATE = auto()
     NAME = auto()
     CATEGORY = auto()
@@ -25,44 +17,78 @@ class ColumnType(Enum):
     AMOUNT = auto()
 
 
-HEADINGS = MappingProxyType(
-    {
-        ColumnType.DATE: "日期",
-        ColumnType.NAME: "姓名",
-        ColumnType.CATEGORY: "类别",
-        ColumnType.HASINVOICE: "是否有发票",
-        ColumnType.DESCRIPTION: "说明",
-        ColumnType.AMOUNT: "金额",
-    }
-)
-COLORS = MappingProxyType(
-    {
-        "black": RGBColor(0, 0, 0),
-        "red": RGBColor(255, 0, 0),
-        "blue": RGBColor(0, 0, 255),
-        "green": RGBColor(0, 255, 0),
-    }
-)
-FONTSIZE = MappingProxyType(
-    {
-        "初号": Pt(42),
-        "小初": Pt(36),
-        "一号": Pt(26),
-        "小一": Pt(24),
-        "二号": Pt(22),
-        "小二": Pt(18),
-        "三号": Pt(16),
-        "小三": Pt(15),
-        "四号": Pt(14),
-        "小四": Pt(12),
-        "五号": Pt(10.5),
-        "小五": Pt(9),
-        "六号": Pt(7.5),
-        "小六": Pt(6.5),
-        "七号": Pt(5.5),
-        "八号": Pt(5),
-    }
-)
+class Color(Enum):
+    BLACK = auto()
+    RED = auto()
+    BLUE = auto()
+    GREEN = auto()
+
+
+def color(color_type: Color) -> RGBColor:
+    match color_type:
+        case Color.BLACK:
+            return RGBColor(0, 0, 0)
+        case Color.RED:
+            return RGBColor(255, 0, 0)
+        case Color.BLUE:
+            return RGBColor(0, 0, 255)
+        case Color.GREEN:
+            return RGBColor(0, 255, 0)
+
+
+class FontSize(Enum):
+    初号 = auto()
+    小初 = auto()
+    一号 = auto()
+    小一 = auto()
+    二号 = auto()
+    小二 = auto()
+    三号 = auto()
+    小三 = auto()
+    四号 = auto()
+    小四 = auto()
+    五号 = auto()
+    小五 = auto()
+    六号 = auto()
+    小六 = auto()
+    七号 = auto()
+    八号 = auto()
+
+
+def font_size(font_type: FontSize) -> Pt:
+    match font_type:
+        case FontSize.初号:
+            return Pt(42)
+        case FontSize.小初:
+            return Pt(36)
+        case FontSize.一号:
+            return Pt(26)
+        case FontSize.小一:
+            return Pt(24)
+        case FontSize.二号:
+            return Pt(22)
+        case FontSize.小二:
+            return Pt(18)
+        case FontSize.三号:
+            return Pt(16)
+        case FontSize.小三:
+            return Pt(15)
+        case FontSize.四号:
+            return Pt(14)
+        case FontSize.小四:
+            return Pt(12)
+        case FontSize.五号:
+            return Pt(10.5)
+        case FontSize.小五:
+            return Pt(9)
+        case FontSize.六号:
+            return Pt(7.5)
+        case FontSize.小六:
+            return Pt(6.5)
+        case FontSize.七号:
+            return Pt(5.5)
+        case FontSize.八号:
+            return Pt(5)
 
 
 class FontFamily(Enum):
@@ -71,45 +97,43 @@ class FontFamily(Enum):
     BOLD = auto()
 
 
-def init_blank_document() -> Document:
-    def func(style, font_family: FontFamily) -> None:  # type:ignore
-        match font_family:
-            case FontFamily.ROMAN:
-                style.font.name = "Times New Roman"
-                style.font._element.rPr.rFonts.set(qn("w:eastAsia"), "宋体")
-            case FontFamily.ITALIC:
-                style.font.name = "Times New Roman"
-                style.font._element.rPr.rFonts.set(qn("w:eastAsia"), "楷体")
-            case FontFamily.BOLD:
-                style.font.name = "Arial"
-                style.font._element.rPr.rFonts.set(qn("w:eastAsia"), "黑体")
-        # May raise AttributeError
+def font_family(font_type: FontFamily) -> tuple[str, str]:
+    match font_type:
+        case FontFamily.ROMAN:
+            return ("Times New Roman", "宋体")
+        case FontFamily.ITALIC:
+            return ("Times New Roman", "楷体")
+        case FontFamily.BOLD:
+            return ("Arial", "黑体")
 
+
+def set_style_font(style, font_type: FontFamily) -> bool:
+    (western, asian) = font_family(font_type)
+    try:
+        style.font.name = western
+        style.font._element.rPr.rFonts.set(qn("w:eastAsia"), asian)
+    except AttributeError:
+        return False
+    return True
+
+
+def init_blank_document() -> Document:
     from docx import Document as create_document
 
     doc = create_document()
-
-    style = doc.styles["Normal"]
-    func(style, FontFamily.ROMAN)
+    for style in doc.styles:
+        set_style_font(style, FontFamily.ROMAN)
+        style.font.color.rgb = color(Color.BLACK)
 
     style = doc.styles["Emphasis"]
-    func(style, FontFamily.ITALIC)
+    set_style_font(style, FontFamily.ITALIC)
     style.font.italic = False
     style.font.bold = False
 
     style = doc.styles["Strong"]
-    func(style, FontFamily.BOLD)
+    set_style_font(style, FontFamily.BOLD)
     style.font.italic = False
     style.font.bold = True
-
-    for i in range(9):
-        style = doc.styles[f"Heading {i+1}"]
-        func(style, FontFamily.ROMAN)
-        style.font.color.rgb = COLORS["black"]
-
-    style = doc.styles["Title"]
-    func(style, FontFamily.ROMAN)
-    style.font.color.rgb = COLORS["black"]
 
     return doc
 
@@ -118,10 +142,25 @@ def init_blank_document() -> Document:
 def load_data(csv_file: str) -> pd.DataFrame:
     return (
         Pipe(csv_file)
-        .map(curry(pd.read_csv)(sep="\t")(names=HEADINGS.values()))
+        .map(
+            curry(pd.read_csv)(sep="\t")(
+                names=[
+                    Column.DATE,
+                    Column.NAME,
+                    Column.CATEGORY,
+                    Column.HASINVOICE,
+                    Column.DESCRIPTION,
+                    Column.AMOUNT,
+                ]
+            )
+        )
         .map(
             lambda x: x.sort_values(
-                by=[HEADINGS[ColumnType.NAME], HEADINGS[ColumnType.DATE]]
+                by=[
+                    Column.NAME,
+                    Column.DATE,
+                    Column.CATEGORY,
+                ]
             ),
         )
         .flush()
