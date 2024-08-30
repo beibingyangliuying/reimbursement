@@ -96,30 +96,28 @@ def summary(doc: Document, csv_file: str) -> Document:
 
 
 @curry
-def beginning(doc: Document, title: str) -> Document:
-    doc.add_paragraph(title, style="Title")
+def beginning(doc: Document) -> Document:
+    doc.add_paragraph("填写标题", style="Title")
     paragraph = doc.add_paragraph()
-    paragraph.add_run("出差时间：").bold = True
+    paragraph.add_run("出差时间：填写起始日期至填写结束日期").bold = True
 
     paragraph = doc.add_paragraph()
-    paragraph.add_run("出差地点：").bold = True
+    paragraph.add_run("出差地点：填写出差地点").bold = True
 
     paragraph = doc.add_paragraph()
-    paragraph.add_run("报销时间：").bold = True
+    paragraph.add_run("报销时间：填写报销时间").bold = True
 
     doc.add_paragraph("-" * 50)
-    doc.add_paragraph("出差前预支款：")
+    doc.add_paragraph("出差前预支款：填写预支款")
     doc.add_paragraph("-" * 50)
 
     return doc
 
 
-def main(csv_file: str, **kwargs) -> Document:  # type:ignore
-    title = kwargs.get("title", "填写标题")
-
+def main(csv_file: str) -> Document:
     return (
         Pipe(init_blank_document())
-        .map(beginning(title=title))
+        .map(beginning)
         .map(expense_statement(csv_file=csv_file))
         .map(summary(csv_file=csv_file))
         .flush()

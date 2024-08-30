@@ -1,3 +1,4 @@
 from .qiu import main as qiu
 
-__all__ = ["qiu"]
+templates = {"qiu": qiu}
+__all__ = ["templates"]
