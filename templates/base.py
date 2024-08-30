@@ -123,7 +123,6 @@ def init_blank_document() -> Document:
     doc = create_document()
     for style in doc.styles:
         set_style_font(style, FontFamily.ROMAN)
-        style.font.color.rgb = color(Color.BLACK)
 
     style = doc.styles["Emphasis"]
     set_style_font(style, FontFamily.ITALIC)
