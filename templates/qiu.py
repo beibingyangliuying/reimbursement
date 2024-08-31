@@ -6,7 +6,7 @@ from docx.document import Document
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from pymonad.reader import Pipe  # type:ignore
 
-from .base import (
+from base import (
     Color,
     Column,
     FontSize,
