@@ -28,6 +28,7 @@ ruff = "^0.6.2"
 mypy = "^1.11.2"
 ipykernel = "^6.29.5"
 pandas-stubs = "^2.2.2.240807"
+coverage = "^7.6.1"
 
 [build-system]
 requires = ["poetry-core"]

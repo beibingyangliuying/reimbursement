@@ -1,3 +1,5 @@
 *.docx
 *.csv
 *.pyc
+*.wpr
+*.wpu

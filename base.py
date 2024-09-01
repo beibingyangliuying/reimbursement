@@ -36,6 +36,15 @@ def color(color_type: Color) -> RGBColor:
             return RGBColor(0, 255, 0)
 
 
+@curry
+def set_style_color(style, color_type: Color) -> bool:
+    try:
+        style.font.color.rgb = color(color_type)
+    except AttributeError:
+        return False
+    return True
+
+
 class FontSize(Enum):
     初号 = auto()
     小初 = auto()
@@ -91,6 +100,15 @@ def font_size(font_type: FontSize) -> Pt:
             return Pt(5)
 
 
+@curry
+def set_style_font_size(style, font_type: FontSize) -> bool:
+    try:
+        style.font.size = font_size(font_type)
+    except AttributeError:
+        return False
+    return True
+
+
 class FontFamily(Enum):
     ROMAN = auto()
     ITALIC = auto()
@@ -107,7 +125,8 @@ def font_family(font_type: FontFamily) -> tuple[str, str]:
             return ("Arial", "黑体")
 
 
-def set_style_font(style, font_type: FontFamily) -> bool:
+@curry
+def set_style_font_family(style, font_type: FontFamily) -> bool:
     (western, asian) = font_family(font_type)
     try:
         style.font.name = western
@@ -122,15 +141,16 @@ def init_blank_document() -> Document:
 
     doc = create_document()
     for style in doc.styles:
-        set_style_font(style, FontFamily.ROMAN)
+        set_style_font_family(style, FontFamily.ROMAN)
+        set_style_color(style, Color.BLACK)
 
     style = doc.styles["Emphasis"]
-    set_style_font(style, FontFamily.ITALIC)
+    set_style_font_family(style, FontFamily.ITALIC)
     style.font.italic = False
     style.font.bold = False
 
     style = doc.styles["Strong"]
-    set_style_font(style, FontFamily.BOLD)
+    set_style_font_family(style, FontFamily.BOLD)
     style.font.italic = False
     style.font.bold = True
 
